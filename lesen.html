@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesen - Exam Preparation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .heading-card {
+            cursor: grab;
+            transition: all 0.2s ease-in-out;
+        }
+        .heading-card:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+        .heading-card.dragging {
+            opacity: 0.5;
+        }
+        .heading-card.used {
+            opacity: 0.3;
+            cursor: not-allowed;
+            background-color: #e5e7eb;
+        }
+        .drop-zone {
+            transition: all 0.2s ease-in-out;
+            border: 2px dashed #9ca3af;
+        }
+        .drop-zone.drag-over {
+            background-color: #d1fae5;
+            border-color: #10b981;
+        }
+        .drop-zone.correct {
+            background-color: #dcfce7;
+            border-color: #22c55e;
+            color: #166534;
+        }
+        .drop-zone.incorrect {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 sm:p-8">
+
+    <div id="loading-view" class="text-center">
+        <p class="text-lg font-semibold">Loading Exam...</p>
+    </div>
+
+    <div id="exam-view" class="hidden max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Lesen</h1>
+                <p id="exam-title" class="text-gray-600">Aufgabe 1 | Blatt 1</p>
+            </div>
+            <div class="text-right">
+                <p class="text-gray-600">insgesamt 30 Minuten</p>
+                <p class="font-bold text-gray-800">15 Punkte</p>
+            </div>
+        </header>
+
+        <!-- Instructions -->
+        <p id="instructions" class="mb-8 bg-white p-4 rounded-lg shadow-sm">
+            Lesen Sie die 10 Überschriften auf Blatt 1 und die 5 Texte auf Blatt 2. Suchen Sie dann zu jedem Text (1–5) die passende Überschrift (A–K) und schreiben Sie den Buchstaben auf die Linie über dem Text (1 Überschrift: ___). Pro Text gibt es nur eine richtige Lösung.
+        </p>
+
+        <!-- Main Content Grid -->
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Left Column: Headings -->
+            <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-xl font-bold mb-4">Überschriften (A-K)</h2>
+                <div id="headings-container" class="space-y-3">
+                    <!-- Headings will be populated here -->
+                </div>
+            </div>
+
+            <!-- Right Column: Texts -->
+            <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-xl font-bold mb-4">Texte (1-5)</h2>
+                <div id="texts-container" class="space-y-6">
+                    <!-- Texts will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Button -->
+        <footer class="text-center mt-8">
+            <button id="check-answers-btn" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-4 px-16 rounded-lg text-xl transition-colors shadow-lg">Antworten prüfen</button>
+            <p id="result-message" class="mt-4 font-bold text-2xl h-8"></p>
+        </footer>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- DOM ELEMENTS ---
+        const loadingView = document.getElementById('loading-view');
+        const examView = document.getElementById('exam-view');
+        const headingsContainer = document.getElementById('headings-container');
+        const textsContainer = document.getElementById('texts-container');
+        const checkAnswersBtn = document.getElementById('check-answers-btn');
+        const resultMessage = document.getElementById('result-message');
+
+        let draggedItem = null;
+        let examData = null;
+
+        // --- DRAG & DROP LOGIC ---
+        function handleDragStart(e) {
+            draggedItem = e.target;
+            setTimeout(() => e.target.classList.add('dragging'), 0);
+        }
+
+        function handleDragEnd(e) {
+            draggedItem.classList.remove('dragging');
+            draggedItem = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function handleDragEnter(e) {
+            e.target.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.target.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const dropZone = e.target;
+            dropZone.classList.remove('drag-over');
+
+            if (draggedItem && !draggedItem.classList.contains('used')) {
+                // Clear previous content and reset old heading if any
+                const previousLetter = dropZone.dataset.currentAnswer;
+                if (previousLetter) {
+                    const oldHeading = document.querySelector(`[data-letter="${previousLetter}"]`);
+                    if (oldHeading) oldHeading.classList.remove('used');
+                }
+                
+                // Set new answer
+                const letter = draggedItem.dataset.letter;
+                dropZone.textContent = letter;
+                dropZone.dataset.currentAnswer = letter;
+                draggedItem.classList.add('used');
+            }
+        }
+        
+        // --- EXAM LOGIC ---
+        function checkAnswers() {
+            let correctCount = 0;
+            const dropZones = document.querySelectorAll('.drop-zone');
+            
+            dropZones.forEach(zone => {
+                const textId = zone.dataset.textId;
+                const userAnswer = zone.dataset.currentAnswer;
+                const correctAnswer = examData.answers[textId];
+
+                zone.classList.remove('correct', 'incorrect');
+                if (userAnswer) {
+                    if (userAnswer === correctAnswer) {
+                        zone.classList.add('correct');
+                        correctCount++;
+                    } else {
+                        zone.classList.add('incorrect');
+                    }
+                }
+            });
+
+            resultMessage.textContent = `Du hast ${correctCount} von ${dropZones.length} richtig!`;
+            if (correctCount === dropZones.length) {
+                resultMessage.classList.add('text-green-600');
+            } else {
+                resultMessage.classList.add('text-red-600');
+            }
+        }
+
+        function populateExam(data) {
+            // Populate Headings
+            data.headings.forEach(h => {
+                const div = document.createElement('div');
+                div.className = 'heading-card bg-gray-100 p-3 rounded-md border flex items-center';
+                div.draggable = true;
+                div.dataset.letter = h.letter;
+                div.innerHTML = `<span class="font-bold text-violet-700 mr-3 w-6 text-center">${h.letter}</span> <span>${h.text}</span>`;
+                div.addEventListener('dragstart', handleDragStart);
+                div.addEventListener('dragend', handleDragEnd);
+                headingsContainer.appendChild(div);
+            });
+
+            // Populate Texts
+            data.texts.forEach(t => {
+                const div = document.createElement('div');
+                div.className = 'text-card bg-gray-50 p-4 rounded-lg border';
+                div.innerHTML = `
+                    <div class="flex items-center mb-2">
+                        <span class="font-bold text-xl mr-2">${t.id}</span>
+                        <p class="font-semibold">Überschrift: 
+                            <span class="drop-zone w-10 h-10 inline-flex items-center justify-center rounded-md ml-2 font-bold text-xl" data-text-id="${t.id}"></span>
+                        </p>
+                    </div>
+                    <p class="text-gray-700">${t.text}</p>
+                `;
+                textsContainer.appendChild(div);
+            });
+
+            // Add event listeners to drop zones
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.addEventListener('dragover', handleDragOver);
+                zone.addEventListener('dragenter', handleDragEnter);
+                zone.addEventListener('dragleave', handleDragLeave);
+                zone.addEventListener('drop', handleDrop);
+            });
+        }
+
+        async function loadExam() {
+            // In a real app, you would fetch this data. For now, we use a placeholder.
+            // const response = await fetch('YOUR_SCRIPT_URL?action=getLesenExam&id=lesen_A2_1');
+            // examData = await response.json();
+            
+            // Placeholder data based on your screenshots
+            examData = {
+                headings: [
+                    { letter: 'A', text: 'Jetzt das Fahrrad reparieren lassen' },
+                    { letter: 'B', text: 'Im Rathaus: Informationen über Tiere' },
+                    { letter: 'C', text: 'Tipp: Ausflug in den Tierpark' },
+                    { letter: 'D', text: 'Frühlingspflanzen im Sonderangebot' },
+                    { letter: 'E', text: 'Tipps fürs Radfahren in der Stadt' },
+                    { letter: 'F', text: 'Radfahren ist gesund!' },
+                    { letter: 'G', text: 'Mit neuen Pflanzen in den Frühling' },
+                    { letter: 'H', text: 'Haustiere machen krank' },
+                    { letter: 'I', text: 'Ausstellung: Blumen im Frühling' },
+                    { letter: 'K', text: 'Wiener wurden zum Radfahren befragt' }
+                ],
+                texts: [
+                    { id: '1', text: 'Seit Jahrzehnten ist der Oberberger Tierpark ein beliebtes Ausflugsziel. Die Vielfalt der Tiere und Pflanzen und die wunderbare Naturlandschaft sind die Gründe dafür. Das Angebot ist vielfältig: Führungen, Tierfütterungen, Naturlehrpfad, Waldspielplätze und vieles mehr.' },
+                    { id: '2', text: 'Fahrrad fahren in Hamburg liegt voll im Trend. Das Fahrrad hat sich im Stadtgebiet heute einen wichtigen Platz erobert. Mehr als 1.000 Kilometer an Radwegen sollen Sie animieren, umzusteigen und das Fahrrad (neu) zu entdecken. Was Sie dabei beachten müssen, aber auch Tipps zu interessanten Routen - das finden Sie unter www.hamburg.de/verkehr/radfahren.' },
+                    { id: '3', text: 'An Werktagen nützen 37 Prozent der Wiener ihr Rad in der Freizeit, aber auch für Wege in die Arbeit oder zur Schule/Uni ist das Rad ein beliebtes Verkehrsmittel. Das ging aus den Antworten auf eine Interview-Reihe zum Thema „Mit dem Fahrrad in Wien“ hervor. Das Ergebnis der Umfrage im Detail:' },
+                    { id: '4', text: 'Die aktuelle Ausstellung im Rathaus bietet Wissenswertes über Tierschutz und Tierhaltung. Für Kinder gibt es die Möglichkeit, verschiedene Haustiere kennenzulernen und sich über das Zusammenleben mit ihnen zu informieren. Der Eintritt ist frei!' },
+                    { id: '5', text: '„Unsere Stadt blüht auf!“ – Das ist unser Motto für den Frühling und alle sind eingeladen, mitzumachen: Egal ob Sie neue Sträucher, Bäume oder Blumen am Fenster pflanzen – mehr Natur tut allen gut! Schicken Sie ein Foto von Ihren Frühlingspflanzen an das Gemeindeamt und gewinnen Sie einen Einkaufsgutschein im Wert von 50 Euro.' }
+                ],
+                answers: { '1': 'C', '2': 'E', '3': 'K', '4': 'B', '5': 'G' }
+            };
+
+            populateExam(examData);
+            loadingView.classList.add('hidden');
+            examView.classList.remove('hidden');
+        }
+
+        checkAnswersBtn.addEventListener('click', checkAnswers);
+        loadExam();
+    });
+    </script>
+
+</body>
+</html>
