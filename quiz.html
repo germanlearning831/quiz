@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>German Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; touch-action: manipulation; }
+        .view-container { animation: fadeIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+        .word-bank-button, .answer-word-button { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 3px 0 0 rgba(0,0,0,0.08); }
+        .word-bank-button:hover { transform: translateY(-2px); box-shadow: 0 5px 8px 0 rgba(0,0,0,0.1); }
+        .word-bank-button:active { transform: translateY(1px); box-shadow: 0 2px 0 0 rgba(0,0,0,0.1); }
+        .word-bank-button:disabled { opacity: 0.2; cursor: not-allowed; transform: translateY(0); box-shadow: 0 3px 0 0 rgba(0,0,0,0.08); }
+        .answer-area { border-bottom: 3px solid rgba(255, 255, 255, 0.4); min-height: 90px; transition: all 0.3s ease-in-out; }
+        .feedback-correct { border-color: #22c55e; background-color: rgba(240, 253, 244, 0.8); }
+        .feedback-incorrect { border-color: #ef4444; background-color: rgba(254, 242, 242, 0.8); animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        .main-cta-button { transition: all 0.2s ease-in-out; box-shadow: 0 5px 0 0 rgba(0,0,0,0.15); }
+        .main-cta-button:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .main-cta-button:active { transform: translateY(2px); box-shadow: 0 2px 0 0 rgba(0,0,0,0.2); }
+        .main-cta-button:disabled { filter: grayscale(0.6); opacity: 0.6; cursor: not-allowed; box-shadow: 0 5px 0 0 rgba(0,0,0,0.1); transform: translateY(0); }
+        @keyframes shake { 10%, 90% { transform: translateX(-1px); } 20%, 80% { transform: translateX(2px); } 30%, 50%, 70% { transform: translateX(-4px); } 40%, 60% { transform: translateX(4px); } }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .completion-view { animation: popIn 0.5s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-violet-200 via-pink-200 to-purple-300 flex items-center justify-center min-h-screen p-4">
+
+    <!-- Login View: Collects student details before starting -->
+    <div id="login-view" class="view-container w-full max-w-md mx-auto bg-white/40 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/50 text-center">
+        <h1 id="quiz-title-header" class="text-3xl font-bold text-gray-800 mb-4">Loading Quiz...</h1>
+        <p class="text-gray-600 mb-8">Enter your details to begin.</p>
+        <form id="login-form">
+            <div class="mb-4">
+                <label for="student-name" class="block text-gray-700 text-sm font-bold mb-2 text-left">Your Name:</label>
+                <input type="text" id="student-name" class="shadow-inner appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-violet-500" required>
+            </div>
+            <div class="mb-6">
+                <label for="group-number" class="block text-gray-700 text-sm font-bold mb-2 text-left">Group Number:</label>
+                <input type="text" id="group-number" class="shadow-inner appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-violet-500" required>
+            </div>
+            <button type="submit" id="start-button" class="w-full bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white font-bold py-3 px-4 rounded-xl text-xl uppercase tracking-wider main-cta-button" disabled>Start Lesson</button>
+        </form>
+    </div>
+
+    <!-- App Container: The main quiz game interface -->
+    <div id="app-container" class="view-container hidden w-full max-w-2xl mx-auto bg-white/40 backdrop-blur-xl p-6 sm:p-8 rounded-3xl shadow-2xl border border-white/50">
+        <div id="game-view">
+            <div class="w-full bg-black/5 rounded-full h-3 mb-4 shadow-inner">
+                <div id="progress-bar" class="bg-gradient-to-r from-violet-400 to-fuchsia-500 h-3 rounded-full transition-all duration-500 ease-out"></div>
+            </div>
+            <p id="progress-indicator" class="text-center text-purple-800/70 mb-8 font-medium text-sm"></p>
+            <h1 class="text-xl md:text-2xl font-bold text-gray-800 mb-6">Translate this sentence:</h1>
+            <div class="bg-white/60 p-4 rounded-xl shadow-md mb-6 flex items-center space-x-4 border border-white/50">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-violet-600 flex-shrink-0"><path d="m5 8 6 6"></path><path d="m4 14 6-6 2-3"></path><path d="M2 5h12"></path><path d="M7 2h1"></path><path d="m22 22-5-10-5 10"></path><path d="M14 18h6"></path></svg>
+                <p id="english-sentence" class="text-gray-900 text-lg font-semibold">Loading...</p>
+            </div>
+            <div id="answer-area" class="bg-white/20 p-4 rounded-t-xl flex flex-wrap gap-2 items-center answer-area"></div>
+            <div id="word-bank" class="p-6 flex flex-wrap justify-center items-center gap-3 min-h-[120px]"></div>
+            <div id="controls" class="mt-8 text-center">
+                 <div id="action-buttons" class="flex flex-col md:flex-row gap-4 justify-center">
+                    <button id="check-button" class="w-full md:w-auto bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white font-bold py-4 px-12 rounded-xl text-xl uppercase tracking-wider main-cta-button" disabled>Check</button>
+                    <button id="next-button" class="w-full md:w-auto bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-4 px-12 rounded-xl text-xl uppercase tracking-wider main-cta-button hidden">Continue</button>
+                </div>
+                 <p id="feedback-message" class="mt-6 font-bold h-6 text-lg"></p>
+            </div>
+        </div>
+        <div id="completion-view" class="hidden text-center completion-view">
+            <div class="flex justify-center mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-400 drop-shadow-lg"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>
+            </div>
+            <h2 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-fuchsia-600 mb-4">Lesson Complete!</h2>
+            <p id="completion-message" class="text-gray-700 text-lg mb-8"></p>
+            <div id="submission-status" class="mb-8 text-gray-600">Submitting your result...</div>
+            <div class="flex justify-center">
+                 <a href="index.html" class="bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white font-bold py-4 px-8 rounded-xl text-lg uppercase tracking-wider main-cta-button">Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- CONFIGURATION ---
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzMVkf9FKMJYoCfxI9knHZHicOpJiK-Td9yRHmi4n34riDj6t8F3kmYaDok3MjTYNAUQg/exec";
+
+        // --- DOM Elements ---
+        const loginView = document.getElementById('login-view');
+        const appContainer = document.getElementById('app-container');
+        const loginForm = document.getElementById('login-form');
+        const studentNameInput = document.getElementById('student-name');
+        const groupNumberInput = document.getElementById('group-number');
+        const startButton = document.getElementById('start-button');
+        const quizTitleHeader = document.getElementById('quiz-title-header');
+        
+        const progressBar = document.getElementById('progress-bar');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const englishSentenceEl = document.getElementById('english-sentence');
+        const answerArea = document.getElementById('answer-area');
+        const wordBank = document.getElementById('word-bank');
+        const checkButton = document.getElementById('check-button');
+        const nextButton = document.getElementById('next-button');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const gameView = document.getElementById('game-view');
+        const completionView = document.getElementById('completion-view');
+        const completionMessage = document.getElementById('completion-message');
+        const submissionStatus = document.getElementById('submission-status');
+
+        // --- State ---
+        let sentences = [];
+        let currentSentenceIndex = 0;
+        let userSelection = [];
+        let studentInfo = { name: '', group: '' };
+        let startTime;
+
+        // --- Utility Functions ---
+        const shuffleArray = (array) => { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[array[i], array[j]] = [array[j], array[i]]; } return array; };
+        const formatTime = (milliseconds) => { let totalSeconds = Math.floor(milliseconds / 1000); let minutes = Math.floor(totalSeconds / 60); let seconds = totalSeconds % 60; return `${minutes}m ${seconds}s`; };
+
+        /**
+         * Fetches the specific quiz data from the Google Sheet.
+         */
+        async function fetchQuizData(quizId) {
+            try {
+                const url = `${SCRIPT_URL}?action=getQuizById&id=${quizId}`;
+                const request = new Request(url, {
+                    method: 'GET',
+                    redirect: 'follow'
+                });
+                const response = await fetch(request);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const quizData = await response.json();
+                
+                if (quizData && quizData.title && quizData.sentences) {
+                    quizTitleHeader.textContent = quizData.title;
+                    sentences = quizData.sentences;
+                    startButton.disabled = false; // Enable the start button now that data is loaded
+                } else {
+                    quizTitleHeader.textContent = "Error";
+                    quizTitleHeader.classList.add('text-red-500');
+                    document.getElementById('login-form').innerHTML = '<p class="text-red-500">Could not load quiz data. It may be missing or malformed. Please go back and try another quiz.</p>';
+                }
+            } catch (error) {
+                console.error("Failed to fetch quiz data:", error);
+                quizTitleHeader.textContent = "Network Error";
+                quizTitleHeader.classList.add('text-red-500');
+            }
+        }
+
+        // --- Core Game Logic ---
+        function startGame(e) {
+            e.preventDefault();
+            studentInfo.name = studentNameInput.value.trim();
+            studentInfo.group = groupNumberInput.value.trim();
+            if (studentInfo.name && studentInfo.group) {
+                startTime = new Date();
+                loginView.classList.add('hidden');
+                appContainer.classList.remove('hidden');
+                loadSentence();
+            }
+        }
+        
+        function loadSentence() {
+            if (currentSentenceIndex >= sentences.length) { showCompletionScreen(); return; }
+            userSelection = [];
+            answerArea.innerHTML = '';
+            wordBank.innerHTML = '';
+            feedbackMessage.textContent = '';
+            checkButton.disabled = true;
+            checkButton.classList.remove('hidden');
+            nextButton.classList.add('hidden');
+            answerArea.classList.remove('feedback-correct', 'feedback-incorrect');
+            const progress = ((currentSentenceIndex + 1) / sentences.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            progressIndicator.textContent = `Sentence ${currentSentenceIndex + 1} of ${sentences.length}`;
+            const sentenceData = sentences[currentSentenceIndex];
+            englishSentenceEl.textContent = sentenceData.en;
+            const words = sentenceData.de.split(' ').map((word, index) => ({ word, originalIndex: index }));
+            const shuffledWords = shuffleArray([...words]);
+            shuffledWords.forEach(wordObj => {
+                const button = document.createElement('button');
+                button.textContent = wordObj.word;
+                button.dataset.originalIndex = wordObj.originalIndex;
+                button.className = 'word-bank-button bg-white border border-gray-200 text-gray-700 font-bold py-3 px-5 rounded-xl text-lg';
+                button.addEventListener('click', () => selectWord(wordObj, button));
+                wordBank.appendChild(button);
+            });
+        }
+
+        function selectWord(wordObj, button) {
+            userSelection.push(wordObj);
+            button.disabled = true;
+            const answerWord = document.createElement('button');
+            answerWord.textContent = wordObj.word;
+            answerWord.className = 'answer-word-button bg-violet-200 border-2 border-violet-300 text-violet-800 font-bold py-3 px-5 rounded-xl text-lg';
+            answerWord.addEventListener('click', () => deselectWord(wordObj, answerWord, button));
+            answerArea.appendChild(answerWord);
+            checkButton.disabled = false;
+        }
+
+        function deselectWord(wordObj, answerWord, originalButton) {
+            const indexToRemove = userSelection.findIndex(item => item.originalIndex === wordObj.originalIndex);
+            if (indexToRemove > -1) { userSelection.splice(indexToRemove, 1); }
+            answerArea.removeChild(answerWord);
+            originalButton.disabled = false;
+            if (userSelection.length === 0) { checkButton.disabled = true; }
+        }
+
+        function checkAnswer() {
+            const userAnswerString = userSelection.map(item => item.word).join(' ');
+            const correctAnswer = sentences[currentSentenceIndex].de;
+            if (userAnswerString === correctAnswer) {
+                answerArea.classList.add('feedback-correct');
+                feedbackMessage.textContent = 'Excellent!';
+                feedbackMessage.className = 'mt-6 font-bold h-6 text-lg text-green-600';
+                checkButton.classList.add('hidden');
+                nextButton.classList.remove('hidden');
+            } else {
+                answerArea.classList.add('feedback-incorrect');
+                feedbackMessage.textContent = 'Not quite, try again!';
+                feedbackMessage.className = 'mt-6 font-bold h-6 text-lg text-red-600';
+            }
+        }
+
+        function nextSentence() {
+            currentSentenceIndex++;
+            loadSentence();
+        }
+
+        async function showCompletionScreen() {
+            const endTime = new Date();
+            const timeTakenMs = endTime - startTime;
+            const timeTakenFormatted = formatTime(timeTakenMs);
+
+            gameView.classList.add('hidden');
+            completionView.classList.remove('hidden');
+            completionMessage.innerHTML = `Fantastic work!<br>Your time: <strong>${timeTakenFormatted}</strong>`;
+
+            // --- Submit data to Google Sheet ---
+            const result = {
+                name: studentInfo.name,
+                group: studentInfo.group,
+                timeTaken: timeTakenFormatted,
+                timeMs: timeTakenMs
+            };
+
+            try {
+                const url = `${SCRIPT_URL}?action=addResult`;
+                const request = new Request(url, {
+                    method: 'POST',
+                    body: JSON.stringify(result),
+                    redirect: 'follow',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                });
+
+                const response = await fetch(request);
+                const data = await response.json();
+                if (data.result === 'success') {
+                    submissionStatus.textContent = 'Your result has been saved!';
+                    submissionStatus.style.color = 'green';
+                } else { throw new Error(data.error || 'Unknown error from script'); }
+            } catch (error) {
+                console.error('Error submitting to Google Sheet:', error);
+                submissionStatus.textContent = 'Could not save your result. Please check your connection.';
+                submissionStatus.style.color = 'red';
+            }
+        }
+
+        // --- Initial Load ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const quizId = urlParams.get('id');
+
+        if (quizId) {
+            fetchQuizData(quizId);
+        } else {
+            quizTitleHeader.textContent = "No Quiz Selected";
+            document.getElementById('login-form').innerHTML = '<p class="text-red-500 font-bold">Please go back to the home page and select a quiz.</p>';
+        }
+
+        loginForm.addEventListener('submit', startGame);
+        checkButton.addEventListener('click', checkAnswer);
+        nextButton.addEventListener('click', nextSentence);
+    });
+    </script>
+</body>
+</html>
