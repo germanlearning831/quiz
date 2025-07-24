@@ -8,161 +8,99 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .heading-card {
-            cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
-        }
-        .heading-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
-        }
-        .heading-card.selected {
-            border-color: #4f46e5; /* Indigo-600 */
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 10px 15px -3px rgba(79,70,229,0.2), 0 4px 6px -4px rgba(79,70,229,0.2);
-        }
-        .heading-card.used {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: scale(0.95);
-        }
-        .heading-card.used .check-icon {
-            opacity: 1;
-        }
-        .drop-zone {
-            transition: all 0.2s ease-in-out;
-            border: 2px dashed #a78bfa; /* Violet-300 */
-            cursor: pointer;
-        }
-        .drop-zone:hover {
-            background-color: #f5d0fe; /* Fuchsia-100 */
-            border-color: #c026d3; /* Fuchsia-600 */
-        }
-        .drop-zone.correct {
-            background-color: #dcfce7;
-            border-color: #22c55e;
-            color: #166534;
-            animation: popIn 0.3s ease-out;
-        }
-        .drop-zone.incorrect {
-            background-color: #fee2e2;
-            border-color: #ef4444;
-            color: #991b1b;
-            animation: popIn 0.3s ease-out;
-        }
-        .animated-card {
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 0.5s ease-out forwards;
-        }
-        #confetti-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 9999;
-            pointer-events: none; /* Allows clicks to go through */
-        }
-        @keyframes fadeInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        @keyframes popIn {
-            0% { transform: scale(0.8); opacity: 0; }
-            70% { transform: scale(1.1); }
-            100% { transform: scale(1); opacity: 1; }
-        }
+        .heading-card { cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(255, 255, 255, 0.5); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1); }
+        .heading-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1); }
+        .heading-card.selected { border-color: #4f46e5; transform: translateY(-2px) scale(1.05); box-shadow: 0 10px 15px -3px rgba(79,70,229,0.2), 0 4px 6px -4px rgba(79,70,229,0.2); }
+        .heading-card.used { opacity: 0.5; cursor: not-allowed; transform: scale(0.95); }
+        .heading-card.used .check-icon { opacity: 1; }
+        .drop-zone { transition: all 0.2s ease-in-out; border: 2px dashed #a78bfa; cursor: pointer; }
+        .drop-zone:hover { background-color: #f5d0fe; border-color: #c026d3; }
+        .drop-zone.correct { background-color: #dcfce7; border-color: #22c55e; color: #166534; animation: popIn 0.3s ease-out; }
+        .drop-zone.incorrect { background-color: #fee2e2; border-color: #ef4444; color: #991b1b; animation: popIn 0.3s ease-out; }
+        .animated-card { opacity: 0; transform: translateY(20px); animation: fadeInUp 0.5s ease-out forwards; }
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; pointer-events: none; }
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 70% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 p-4 sm:p-8">
+<body class="bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 p-4 sm:p-8 flex items-center justify-center min-h-screen">
     
-    <!-- Canvas for confetti animation -->
     <canvas id="confetti-canvas"></canvas>
 
-    <div id="loading-view" class="text-center p-10">
-        <p class="text-lg font-semibold">Loading Exam...</p>
+    <!-- Login View -->
+    <div id="login-view" class="w-full max-w-md mx-auto bg-white/60 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border text-center animated-card">
+        <h1 id="exam-title-header" class="text-3xl font-bold text-gray-800 mb-4">Loading Exam...</h1>
+        <p class="text-gray-600 mb-8">Enter your details to begin.</p>
+        <form id="login-form">
+            <div class="mb-4">
+                <label for="student-name" class="block text-gray-700 text-sm font-bold mb-2 text-left">Your Name:</label>
+                <input type="text" id="student-name" class="shadow-inner appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-violet-500" required>
+            </div>
+            <div class="mb-6">
+                <label for="group-number" class="block text-gray-700 text-sm font-bold mb-2 text-left">Group Number:</label>
+                <input type="text" id="group-number" class="shadow-inner appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-violet-500" required>
+            </div>
+            <button type="submit" id="start-button" class="w-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold py-3 px-4 rounded-xl text-xl uppercase tracking-wider" disabled>Start Exam</button>
+        </form>
     </div>
 
+    <!-- Exam View -->
     <div id="exam-view" class="hidden max-w-7xl mx-auto">
-        <!-- Header -->
         <header class="text-center mb-10">
             <h1 class="text-5xl font-extrabold text-gray-800">Lesen</h1>
-            <p id="exam-title" class="text-gray-600 mt-2 text-lg">Aufgabe 1 | Blatt 1</p>
+            <p id="exam-title" class="text-gray-600 mt-2 text-lg"></p>
         </header>
-
-        <!-- Instructions -->
         <p id="instructions" class="mb-8 bg-white/60 backdrop-blur-sm p-4 rounded-xl shadow-md text-center max-w-4xl mx-auto border">
             Wählen Sie zuerst eine Überschrift (A–K) aus und klicken Sie dann auf das leere Feld neben dem passenden Text (1–5), um sie zuzuordnen. Pro Text gibt es nur eine richtige Lösung.
         </p>
-
-        <!-- Main Content Grid -->
         <div class="grid lg:grid-cols-3 gap-8">
-            <!-- Left Column: Headings -->
             <div class="lg:col-span-1 bg-gradient-to-br from-white/80 to-white/50 backdrop-blur-sm p-6 rounded-2xl shadow-lg border">
                 <h2 class="text-2xl font-bold mb-4 text-center text-gray-700">Überschriften</h2>
-                <div id="headings-container" class="space-y-3">
-                    <!-- Headings will be populated here -->
-                </div>
+                <div id="headings-container" class="space-y-3"></div>
             </div>
-
-            <!-- Right Column: Texts -->
             <div class="lg:col-span-2 bg-gradient-to-bl from-white/80 to-white/50 backdrop-blur-sm p-6 rounded-2xl shadow-lg border">
                 <h2 class="text-2xl font-bold mb-4 text-center text-gray-700">Texte</h2>
-                <div id="texts-container" class="space-y-6">
-                    <!-- Texts will be populated here -->
-                </div>
+                <div id="texts-container" class="space-y-6"></div>
             </div>
         </div>
-
-        <!-- Action Button -->
         <footer class="text-center mt-8">
             <button id="check-answers-btn" class="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold py-4 px-16 rounded-full text-xl transition-all shadow-lg hover:shadow-xl transform hover:scale-105">Antworten prüfen</button>
             <p id="result-message" class="mt-4 font-bold text-2xl h-8"></p>
+            <div id="submission-status" class="mt-2 text-gray-600 h-6"></div>
         </footer>
     </div>
 
-    <!-- Script for confetti library -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // --- CONFIGURATION ---
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx5XMgjlX7MDkrdq9A-BXLd9r3nnaWbxFh9I33WxXdTLQ0tkSC4s3g2fdbFyi0XKD8/exec";
         const EXAM_ID_TO_LOAD = "lesen_A2_1";
 
-        // --- DOM ELEMENTS ---
-        const loadingView = document.getElementById('loading-view');
+        const loginView = document.getElementById('login-view');
         const examView = document.getElementById('exam-view');
+        const loginForm = document.getElementById('login-form');
+        const studentNameInput = document.getElementById('student-name');
+        const groupNumberInput = document.getElementById('group-number');
+        const startButton = document.getElementById('start-button');
+        const examTitleHeader = document.getElementById('exam-title-header');
         const headingsContainer = document.getElementById('headings-container');
         const textsContainer = document.getElementById('texts-container');
         const checkAnswersBtn = document.getElementById('check-answers-btn');
         const resultMessage = document.getElementById('result-message');
         const examTitleEl = document.getElementById('exam-title');
         const confettiCanvas = document.getElementById('confetti-canvas');
+        const submissionStatus = document.getElementById('submission-status');
 
         let selectedHeading = null;
         let examData = null;
+        let studentInfo = {};
 
-        // --- TAP/CLICK INTERACTION LOGIC ---
         function handleHeadingClick(e) {
             const clickedHeading = e.currentTarget;
             if (clickedHeading.classList.contains('used')) return;
-
-            if (selectedHeading) {
-                selectedHeading.classList.remove('selected');
-            }
-
-            if (selectedHeading === clickedHeading) {
-                selectedHeading = null; // Allow deselecting
-            } else {
-                clickedHeading.classList.add('selected');
-                selectedHeading = clickedHeading;
-            }
+            if (selectedHeading) selectedHeading.classList.remove('selected');
+            if (selectedHeading === clickedHeading) selectedHeading = null;
+            else { clickedHeading.classList.add('selected'); selectedHeading = clickedHeading; }
         }
 
         function handleDropZoneClick(e) {
@@ -172,136 +110,105 @@
                 if (previousLetter) {
                     const oldHeading = document.querySelector(`[data-letter="${previousLetter}"]`);
                     if (oldHeading) oldHeading.classList.remove('used');
-                    dropZone.textContent = '';
-                    dropZone.dataset.currentAnswer = '';
-                    dropZone.innerHTML = '';
-                }
-                return;
+                    dropZone.textContent = ''; dropZone.dataset.currentAnswer = ''; dropZone.innerHTML = '';
+                } return;
             }
-
             const previousLetterInBox = dropZone.dataset.currentAnswer;
             if (previousLetterInBox) {
                 const oldHeading = document.querySelector(`[data-letter="${previousLetterInBox}"]`);
                 if (oldHeading) oldHeading.classList.remove('used');
             }
-
             const letter = selectedHeading.dataset.letter;
-            dropZone.textContent = letter;
-            dropZone.dataset.currentAnswer = letter;
-            
+            dropZone.textContent = letter; dropZone.dataset.currentAnswer = letter;
             document.querySelectorAll('.drop-zone').forEach(zone => {
                 if (zone !== dropZone && zone.dataset.currentAnswer === letter) {
-                    zone.textContent = '';
-                    zone.dataset.currentAnswer = '';
+                    zone.textContent = ''; zone.dataset.currentAnswer = '';
                 }
             });
-
             document.querySelectorAll('.heading-card').forEach(card => {
                 if(card.dataset.letter === letter) card.classList.add('used');
             });
-            selectedHeading.classList.remove('selected');
-            selectedHeading = null;
+            selectedHeading.classList.remove('selected'); selectedHeading = null;
         }
         
-        // --- EXAM LOGIC ---
         function triggerConfetti() {
-            const myConfetti = confetti.create(confettiCanvas, {
-                resize: true,
-                useWorker: true
-            });
-            
-            const duration = 3 * 1000;
-            const end = Date.now() + duration;
-
+            const myConfetti = confetti.create(confettiCanvas, { resize: true, useWorker: true });
+            const duration = 3 * 1000, end = Date.now() + duration;
             (function frame() {
-                myConfetti({
-                    particleCount: 2,
-                    angle: 60,
-                    spread: 55,
-                    origin: { x: 0 }
-                });
-                myConfetti({
-                    particleCount: 2,
-                    angle: 120,
-                    spread: 55,
-                    origin: { x: 1 }
-                });
-
-                if (Date.now() < end) {
-                    requestAnimationFrame(frame);
-                }
+                myConfetti({ particleCount: 2, angle: 60, spread: 55, origin: { x: 0 } });
+                myConfetti({ particleCount: 2, angle: 120, spread: 55, origin: { x: 1 } });
+                if (Date.now() < end) requestAnimationFrame(frame);
             }());
         }
 
-        function checkAnswers() {
+        async function checkAnswers() {
             let correctCount = 0;
             const dropZones = document.querySelectorAll('.drop-zone');
-            
             dropZones.forEach(zone => {
-                const textId = zone.dataset.textId;
-                const userAnswer = zone.dataset.currentAnswer;
-                const correctAnswer = examData.answers[textId];
-
-                zone.classList.remove('correct', 'incorrect');
-                zone.innerHTML = userAnswer || '';
-
+                const userAnswer = zone.dataset.currentAnswer, correctAnswer = examData.answers[zone.dataset.textId];
+                zone.classList.remove('correct', 'incorrect'); zone.innerHTML = userAnswer || '';
                 if (userAnswer) {
                     if (userAnswer === correctAnswer) {
-                        zone.classList.add('correct');
-                        zone.innerHTML = `<span class="mr-1">✓</span> ${userAnswer}`;
-                        correctCount++;
+                        zone.classList.add('correct'); zone.innerHTML = `<span class="mr-1">✓</span> ${userAnswer}`; correctCount++;
                     } else {
-                        zone.classList.add('incorrect');
-                        zone.innerHTML = `<span class="mr-1">✗</span> ${userAnswer}`;
+                        zone.classList.add('incorrect'); zone.innerHTML = `<span class="mr-1">✗</span> ${userAnswer}`;
                     }
                 }
             });
-
             resultMessage.textContent = `Du hast ${correctCount} von ${dropZones.length} richtig!`;
             resultMessage.classList.remove('text-green-600', 'text-red-600');
             if (correctCount === dropZones.length) {
-                resultMessage.classList.add('text-green-600');
-                resultMessage.textContent = 'Perfekt! Alles richtig!';
-                triggerConfetti(); // Fire confetti on perfect score
-            } else {
-                resultMessage.classList.add('text-red-600');
+                resultMessage.classList.add('text-green-600'); resultMessage.textContent = 'Perfekt! Alles richtig!'; triggerConfetti();
+            } else { resultMessage.classList.add('text-red-600'); }
+            
+            // Save the result after checking
+            await saveResult(correctCount, dropZones.length);
+            checkAnswersBtn.disabled = true; // Prevent re-submission
+        }
+
+        async function saveResult(correct, total) {
+            submissionStatus.textContent = 'Dein Ergebnis wird übermittelt...';
+            const result = {
+                name: studentInfo.name,
+                group: studentInfo.group,
+                score: {
+                    formatted: `${correct} / ${total}`,
+                    percentage: correct / total
+                }
+            };
+            try {
+                const url = `${SCRIPT_URL}?action=addResult`;
+                const response = await fetch(url, { method: 'POST', mode: 'cors', redirect: 'follow', body: JSON.stringify(result), headers: { 'Content-Type': 'text/plain;charset=utf-8' } });
+                const data = await response.json();
+                if (data.result === 'success') {
+                    submissionStatus.textContent = 'Dein Ergebnis wurde gespeichert!';
+                    submissionStatus.style.color = 'green';
+                } else { throw new Error(data.message || 'Unknown error'); }
+            } catch (error) {
+                console.error('Error submitting result:', error);
+                submissionStatus.textContent = 'Ergebnis konnte nicht gespeichert werden.';
+                submissionStatus.style.color = 'red';
             }
         }
 
         function populateExam(data) {
             examTitleEl.textContent = data.examTitle;
+            examTitleHeader.textContent = data.examTitle;
             data.headings.forEach((h, index) => {
                 const div = document.createElement('div');
-                // *** FIX APPLIED HERE: Added gradient background to heading cards ***
                 div.className = 'heading-card bg-gradient-to-r from-white to-gray-50 p-3 rounded-lg flex items-center animated-card';
-                div.dataset.letter = h.letter;
-                div.style.animationDelay = `${index * 50}ms`;
-                div.innerHTML = `
-                    <span class="font-bold text-lg bg-gradient-to-br from-violet-500 to-indigo-500 text-white mr-4 w-8 h-8 flex items-center justify-center rounded-md flex-shrink-0">${h.letter}</span> 
-                    <span class="text-gray-700">${h.text}</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="check-icon h-6 w-6 text-green-500 ml-auto opacity-0 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                `;
+                div.dataset.letter = h.letter; div.style.animationDelay = `${index * 50}ms`;
+                div.innerHTML = `<span class="font-bold text-lg bg-gradient-to-br from-violet-500 to-indigo-500 text-white mr-4 w-8 h-8 flex items-center justify-center rounded-md flex-shrink-0">${h.letter}</span> <span class="text-gray-700">${h.text}</span><svg xmlns="http://www.w3.org/2000/svg" class="check-icon h-6 w-6 text-green-500 ml-auto opacity-0 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>`;
                 div.addEventListener('click', handleHeadingClick);
                 headingsContainer.appendChild(div);
             });
-
             data.texts.forEach((t, index) => {
                 const div = document.createElement('div');
-                // *** FIX APPLIED HERE: Added gradient background to text cards ***
                 div.className = 'text-card bg-gradient-to-r from-white to-purple-50 border-purple-200 p-4 rounded-xl shadow-sm border animated-card';
                 div.style.animationDelay = `${(index * 100) + 200}ms`;
-                div.innerHTML = `
-                    <div class="flex items-start mb-3">
-                        <span class="font-bold text-lg bg-gradient-to-br from-pink-500 to-orange-400 text-white mr-4 w-8 h-8 flex items-center justify-center rounded-md flex-shrink-0">${t.id}</span>
-                        <p class="font-semibold text-gray-700 mt-1">Überschrift: 
-                            <span class="drop-zone w-12 h-12 inline-flex items-center justify-center rounded-lg ml-2 font-bold text-2xl align-middle" data-text-id="${t.id}"></span>
-                        </p>
-                    </div>
-                    <p class="text-gray-700 leading-relaxed pl-12">${t.text}</p>
-                `;
+                div.innerHTML = `<div class="flex items-start mb-3"><span class="font-bold text-lg bg-gradient-to-br from-pink-500 to-orange-400 text-white mr-4 w-8 h-8 flex items-center justify-center rounded-md flex-shrink-0">${t.id}</span><p class="font-semibold text-gray-700 mt-1">Überschrift: <span class="drop-zone w-12 h-12 inline-flex items-center justify-center rounded-lg ml-2 font-bold text-2xl align-middle" data-text-id="${t.id}"></span></p></div><p class="text-gray-700 leading-relaxed pl-12">${t.text}</p>`;
                 textsContainer.appendChild(div);
             });
-
             document.querySelectorAll('.drop-zone').forEach(zone => {
                 zone.addEventListener('click', handleDropZoneClick);
             });
@@ -312,25 +219,30 @@
                 const url = `${SCRIPT_URL}?action=getLesenExam&id=${EXAM_ID_TO_LOAD}`;
                 const response = await fetch(url, { method: 'GET', mode: 'cors', redirect: 'follow' });
                 if (!response.ok) { throw new Error(`HTTP Error: ${response.status}`); }
-                
                 const data = await response.json();
                 if (data.result === 'error') { throw new Error(data.message); }
-
                 examData = data;
                 populateExam(examData);
-                loadingView.classList.add('hidden');
-                examView.classList.remove('hidden');
-
+                startButton.disabled = false;
             } catch (error) {
                 console.error("Failed to load exam:", error);
-                loadingView.innerHTML = `<p class="text-red-500 font-bold">Error loading exam: ${error.message}</p>`;
+                examTitleHeader.innerHTML = `<p class="text-red-500 font-bold">Error loading exam: ${error.message}</p>`;
             }
         }
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            studentInfo.name = studentNameInput.value.trim();
+            studentInfo.group = groupNumberInput.value.trim();
+            if (studentInfo.name && studentInfo.group) {
+                loginView.classList.add('hidden');
+                examView.classList.remove('hidden');
+            }
+        });
 
         checkAnswersBtn.addEventListener('click', checkAnswers);
         loadExam();
     });
     </script>
-
 </body>
 </html>
