@@ -83,7 +83,7 @@
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         // --- CONFIGURATION ---
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzMVkf9FKMJYoCfxI9knHZHicOpJiK-Td9yRHmi4n34riDj6t8F3kmYaDok3MjTYNAUQg/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwFPaM0c6a3Ko2e4akWZ_wgQ2DPEH58XQ0Y228gXUZ5resLP-sFr-m-DJ3aYO8WB9Auw/exec";
 
         // --- DOM Elements ---
         const loginView = document.getElementById('login-view');
@@ -124,11 +124,13 @@
         async function fetchQuizData(quizId) {
             try {
                 const url = `${SCRIPT_URL}?action=getQuizById&id=${quizId}`;
-                const request = new Request(url, {
+                
+                // *** FIX APPLIED HERE ***
+                const response = await fetch(url, {
                     method: 'GET',
+                    mode: 'cors',
                     redirect: 'follow'
                 });
-                const response = await fetch(request);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
@@ -138,7 +140,7 @@
                 if (quizData && quizData.title && quizData.sentences) {
                     quizTitleHeader.textContent = quizData.title;
                     sentences = quizData.sentences;
-                    startButton.disabled = false; // Enable the start button now that data is loaded
+                    startButton.disabled = false;
                 } else {
                     quizTitleHeader.textContent = "Error";
                     quizTitleHeader.classList.add('text-red-500');
@@ -240,7 +242,6 @@
             completionView.classList.remove('hidden');
             completionMessage.innerHTML = `Fantastic work!<br>Your time: <strong>${timeTakenFormatted}</strong>`;
 
-            // --- Submit data to Google Sheet ---
             const result = {
                 name: studentInfo.name,
                 group: studentInfo.group,
@@ -250,14 +251,13 @@
 
             try {
                 const url = `${SCRIPT_URL}?action=addResult`;
-                const request = new Request(url, {
+                const response = await fetch(url, {
                     method: 'POST',
-                    body: JSON.stringify(result),
+                    mode: 'cors',
                     redirect: 'follow',
+                    body: JSON.stringify(result),
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' }
                 });
-
-                const response = await fetch(request);
                 const data = await response.json();
                 if (data.result === 'success') {
                     submissionStatus.textContent = 'Your result has been saved!';
@@ -288,3 +288,4 @@
     </script>
 </body>
 </html>
+
