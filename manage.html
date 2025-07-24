@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Content</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Toggle Switch CSS */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #4f46e5;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #4f46e5;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Header & Navigation -->
+    <header class="bg-white shadow-md">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-xl font-bold text-gray-800">Admin Panel</div>
+            <div>
+                <a href="index.html" class="text-gray-600 hover:text-violet-600 px-3 py-2">Student View</a>
+                <a href="dashboard.html" class="text-gray-600 hover:text-violet-600 px-3 py-2">Results Dashboard</a>
+                <a href="create.html" class="text-gray-600 hover:text-violet-600 px-3 py-2">Create Quiz</a>
+                <a href="manage.html" class="font-semibold text-violet-600 border-b-2 border-violet-600 px-3 py-2">Manage Content</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="p-4 sm:p-8">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6">Manage Content</h1>
+            <p class="text-gray-600 mb-8">Use the toggles to make quizzes and exams active or inactive for students.</p>
+
+            <!-- Quizzes Section -->
+            <div class="bg-white p-6 rounded-lg shadow-lg mb-8">
+                <h2 class="text-2xl font-bold text-gray-700 mb-4">Quizzes (Sentence Builders)</h2>
+                <div id="quizzes-list" class="space-y-3">
+                    <p>Loading quizzes...</p>
+                </div>
+            </div>
+
+            <!-- Lesen Exams Section -->
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-700 mb-4">Lesen Exams</h2>
+                <div id="lesen-exams-list" class="space-y-3">
+                    <p>Loading exams...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx5XMgjlX7MDkrdq9A-BXLd9r3nnaWbxFh9I33WxXdTLQ0tkSC4s3g2fdbFyi0XKD8/exec";
+
+        const quizzesList = document.getElementById('quizzes-list');
+        const lesenExamsList = document.getElementById('lesen-exams-list');
+
+        function createListItem(item, sheetName) {
+            const div = document.createElement('div');
+            div.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-md border';
+            
+            const title = document.createElement('span');
+            title.textContent = item.title;
+            title.className = 'text-gray-800';
+
+            // Toggle Switch
+            const toggleContainer = document.createElement('div');
+            toggleContainer.className = 'relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer';
+            checkbox.checked = item.isActive;
+            
+            const label = document.createElement('label');
+            label.className = 'toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer';
+
+            toggleContainer.appendChild(checkbox);
+            toggleContainer.appendChild(label);
+
+            checkbox.addEventListener('change', async () => {
+                // Optimistically update the UI
+                const originalState = checkbox.checked;
+                checkbox.disabled = true;
+                
+                try {
+                    const response = await fetch(`${SCRIPT_URL}?action=toggleActiveStatus`, {
+                        method: 'POST',
+                        mode: 'cors',
+                        redirect: 'follow',
+                        body: JSON.stringify({ id: item.id, sheetName: sheetName }),
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                    });
+                    const result = await response.json();
+                    if (result.result !== 'success') {
+                        throw new Error(result.message || 'Failed to update status.');
+                    }
+                    // Success, the UI is already correct
+                } catch (error) {
+                    console.error('Error toggling status:', error);
+                    // Revert the checkbox on failure
+                    checkbox.checked = !originalState; 
+                    alert('Could not update status. Please try again.');
+                } finally {
+                    checkbox.disabled = false;
+                }
+            });
+
+            div.appendChild(title);
+            div.appendChild(toggleContainer);
+            return div;
+        }
+
+        async function loadAllContent() {
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getAllContent`);
+                const data = await response.json();
+
+                // Populate Quizzes
+                quizzesList.innerHTML = '';
+                if (data.quizzes && data.quizzes.length > 0) {
+                    data.quizzes.forEach(quiz => {
+                        quizzesList.appendChild(createListItem(quiz, 'Quizzes'));
+                    });
+                } else {
+                    quizzesList.innerHTML = '<p>No quizzes found.</p>';
+                }
+
+                // Populate Lesen Exams
+                lesenExamsList.innerHTML = '';
+                if (data.lesenExams && data.lesenExams.length > 0) {
+                    data.lesenExams.forEach(exam => {
+                        lesenExamsList.appendChild(createListItem(exam, 'LesenExams'));
+                    });
+                } else {
+                    lesenExamsList.innerHTML = '<p>No Lesen exams found.</p>';
+                }
+
+            } catch (error) {
+                console.error('Failed to load content:', error);
+                quizzesList.innerHTML = `<p class="text-red-500">Error loading content.</p>`;
+                lesenExamsList.innerHTML = `<p class="text-red-500">Error loading content.</p>`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadAllContent);
+    </script>
+</body>
+</html>
