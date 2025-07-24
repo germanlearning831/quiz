@@ -234,7 +234,8 @@
             }
         });
 
-        // *** FIX APPLIED HERE: Read the exam ID from the URL ***
+        // *** THIS IS THE CRITICAL PART ***
+        // It reads the exam ID from the URL that the user clicked on from the hub page.
         const urlParams = new URLSearchParams(window.location.search);
         const examIdFromUrl = urlParams.get('id');
 
@@ -249,4 +250,3 @@
     </script>
 </body>
 </html>
-
