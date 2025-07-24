@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>German Quiz Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .quiz-link {
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .quiz-link:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-violet-200 via-pink-200 to-purple-300 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-xl mx-auto bg-white/50 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/50 text-center">
+        <h1 class="text-4xl font-bold text-gray-800 mb-4">German Quiz Portal</h1>
+        <p class="text-gray-600 mb-8 text-lg">Please select a quiz to begin.</p>
+        
+        <!-- Quiz list will be populated here -->
+        <div id="quiz-list" class="space-y-4">
+            <!-- Loading message -->
+            <p id="loading-message" class="text-gray-700">Loading quizzes...</p>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        // This is the URL for your Google Apps Script Web App.
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx5XMgjlX7MDkrdq9A-BXLd9r3nnaWbxFh9I33WxXdTLQ0tkSC4s3g2fdbFyi0XKD8/exec";
+
+        // --- DOM ELEMENTS ---
+        const quizListContainer = document.getElementById('quiz-list');
+        const loadingMessage = document.getElementById('loading-message');
+
+        /**
+         * Fetches the list of quizzes from the Google Sheet and displays them.
+         */
+        async function fetchAndDisplayQuizzes() {
+            try {
+                // Construct the URL for the GET request
+                const url = `${SCRIPT_URL}?action=getQuizzes`;
+                
+                // Create a new Request object. This can help with CORS and redirect issues.
+                const request = new Request(url, {
+                    method: 'GET',
+                    redirect: 'follow'
+                });
+
+                const response = await fetch(request);
+                
+                if (!response.ok) {
+                    // Throw a more detailed error if the response is not successful
+                    throw new Error(`HTTP error! Status: ${response.status} ${response.statusText}`);
+                }
+                
+                const quizzes = await response.json();
+
+                // Clear the loading message
+                loadingMessage.style.display = 'none';
+
+                if (quizzes && quizzes.length > 0) {
+                    quizzes.forEach(quiz => {
+                        const link = document.createElement('a');
+                        // We pass the quiz's unique ID in the URL to the next page.
+                        link.href = `quiz.html?id=${quiz.id}`; 
+                        link.textContent = quiz.title;
+                        link.className = 'quiz-link block w-full text-left bg-violet-500 text-white font-bold py-4 px-6 rounded-xl text-xl tracking-wide';
+                        
+                        quizListContainer.appendChild(link);
+                    });
+                } else {
+                    quizListContainer.innerHTML = '<p class="text-red-500">No quizzes found. Please ask the administrator to create one.</p>';
+                }
+
+            } catch (error) {
+                console.error('Failed to fetch quizzes:', error);
+                loadingMessage.style.display = 'none';
+                quizListContainer.innerHTML = `<p class="text-red-500 font-semibold">Error: Could not load quizzes. Please check the script URL and network connection.</p>`;
+            }
+        }
+
+        // --- INITIAL LOAD ---
+        // Fetch and display the quizzes as soon as the page is ready.
+        document.addEventListener('DOMContentLoaded', fetchAndDisplayQuizzes);
+    </script>
+</body>
+</html>
