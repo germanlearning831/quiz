@@ -145,8 +145,6 @@
             };
             
             try {
-                // *** FIX APPLIED HERE ***
-                // This is a more robust way to handle POST requests to Google Scripts.
                 const url = `${SCRIPT_URL}?action=addQuiz`;
                 const response = await fetch(url, {
                     method: 'POST',
@@ -171,7 +169,9 @@
                     sentenceCount = 0;
                     addSentencePair();
                 } else {
-                    throw new Error(result.error || 'Unknown error from script.');
+                    // *** FIX APPLIED HERE ***
+                    // We are now looking for 'result.message' which is what the script sends.
+                    throw new Error(result.message || 'Unknown error from script.');
                 }
 
             } catch (error) {
@@ -192,4 +192,3 @@
     </script>
 </body>
 </html>
-
