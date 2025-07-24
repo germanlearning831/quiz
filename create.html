@@ -138,7 +138,6 @@
                 return;
             }
             
-            // The data must be stringified to be sent correctly in the POST body.
             const quizData = JSON.stringify({ title: quizTitle, sentences: sentences });
 
             const payload = {
@@ -147,15 +146,22 @@
             };
             
             try {
+                // *** FIX APPLIED HERE ***
+                // Simplified the fetch call, which can resolve CORS issues.
                 const url = `${SCRIPT_URL}?action=addQuiz`;
-                const request = new Request(url, {
+                const response = await fetch(url, {
                     method: 'POST',
                     redirect: 'follow',
                     body: JSON.stringify(payload),
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8',
+                    }
                 });
 
-                const response = await fetch(request);
+                if (!response.ok) {
+                    throw new Error(`HTTP Error: ${response.status}`);
+                }
+
                 const result = await response.json();
 
                 if (result.result === 'success') {
