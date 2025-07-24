@@ -74,8 +74,7 @@
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx5XMgjlX7MDkrdq9A-BXLd9r3nnaWbxFh9I33WxXdTLQ0tkSC4s3g2fdbFyi0XKD8/exec";
-        const EXAM_ID_TO_LOAD = "lesen_A2_1";
-
+        
         const loginView = document.getElementById('login-view');
         const examView = document.getElementById('exam-view');
         const loginForm = document.getElementById('login-form');
@@ -161,20 +160,15 @@
                 resultMessage.classList.add('text-green-600'); resultMessage.textContent = 'Perfekt! Alles richtig!'; triggerConfetti();
             } else { resultMessage.classList.add('text-red-600'); }
             
-            // Save the result after checking
             await saveResult(correctCount, dropZones.length);
-            checkAnswersBtn.disabled = true; // Prevent re-submission
+            checkAnswersBtn.disabled = true;
         }
 
         async function saveResult(correct, total) {
             submissionStatus.textContent = 'Dein Ergebnis wird übermittelt...';
             const result = {
-                name: studentInfo.name,
-                group: studentInfo.group,
-                score: {
-                    formatted: `${correct} / ${total}`,
-                    percentage: correct / total
-                }
+                name: studentInfo.name, group: studentInfo.group,
+                score: { formatted: `${correct} / ${total}`, percentage: correct / total }
             };
             try {
                 const url = `${SCRIPT_URL}?action=addResult`;
@@ -214,9 +208,9 @@
             });
         }
 
-        async function loadExam() {
+        async function loadExam(examId) {
             try {
-                const url = `${SCRIPT_URL}?action=getLesenExam&id=${EXAM_ID_TO_LOAD}`;
+                const url = `${SCRIPT_URL}?action=getLesenExam&id=${examId}`;
                 const response = await fetch(url, { method: 'GET', mode: 'cors', redirect: 'follow' });
                 if (!response.ok) { throw new Error(`HTTP Error: ${response.status}`); }
                 const data = await response.json();
@@ -240,9 +234,19 @@
             }
         });
 
+        // *** FIX APPLIED HERE: Read the exam ID from the URL ***
+        const urlParams = new URLSearchParams(window.location.search);
+        const examIdFromUrl = urlParams.get('id');
+
+        if (examIdFromUrl) {
+            loadExam(examIdFromUrl);
+        } else {
+            examTitleHeader.innerHTML = '<p class="text-red-500 font-bold">No Exam Selected. Please go back to the hub.</p>';
+        }
+
         checkAnswersBtn.addEventListener('click', checkAnswers);
-        loadExam();
     });
     </script>
 </body>
 </html>
+
