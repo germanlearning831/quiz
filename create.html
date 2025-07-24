@@ -146,11 +146,11 @@
             
             try {
                 // *** FIX APPLIED HERE ***
+                // This is a more robust way to handle POST requests to Google Scripts.
                 const url = `${SCRIPT_URL}?action=addQuiz`;
                 const response = await fetch(url, {
                     method: 'POST',
-                    mode: 'cors', // Explicitly set mode
-                    redirect: 'follow', // Follow redirects
+                    redirect: 'follow',
                     body: JSON.stringify(payload),
                     headers: {
                         'Content-Type': 'text/plain;charset=utf-8',
@@ -167,9 +167,9 @@
                     statusMessage.textContent = `Quiz "${quizTitle}" saved successfully!`;
                     statusMessage.className = 'mt-6 text-center font-semibold text-green-600';
                     form.reset();
-                    sentencesContainer.innerHTML = '<h2 class="text-lg font-medium text-gray-700 pt-2">Sentences</h2>'; // Clear sentences
+                    sentencesContainer.innerHTML = '<h2 class="text-lg font-medium text-gray-700 pt-2">Sentences</h2>';
                     sentenceCount = 0;
-                    addSentencePair(); // Add one empty pair for the next quiz
+                    addSentencePair();
                 } else {
                     throw new Error(result.error || 'Unknown error from script.');
                 }
@@ -188,8 +188,8 @@
         form.addEventListener('submit', handleFormSubmit);
 
         // --- INITIAL LOAD ---
-        // Start with one empty sentence pair ready to be filled out.
         addSentencePair();
     </script>
 </body>
 </html>
+
