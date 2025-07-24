@@ -47,7 +47,7 @@
 </head>
 <body class="bg-gray-100 p-4 sm:p-8">
 
-    <div id="loading-view" class="text-center">
+    <div id="loading-view" class="text-center p-10">
         <p class="text-lg font-semibold">Loading Exam...</p>
     </div>
 
@@ -66,7 +66,7 @@
 
         <!-- Instructions -->
         <p id="instructions" class="mb-8 bg-white p-4 rounded-lg shadow-sm">
-            Lesen Sie die 10 Überschriften auf Blatt 1 und die 5 Texte auf Blatt 2. Suchen Sie dann zu jedem Text (1–5) die passende Überschrift (A–K) und schreiben Sie den Buchstaben auf die Linie über dem Text (1 Überschrift: ___). Pro Text gibt es nur eine richtige Lösung.
+            Lesen Sie die 10 Überschriften auf Blatt 1 und die 5 Texte auf Blatt 2. Suchen Sie dann zu jedem Text (1–5) die passende Überschrift (A–K) und ziehen Sie den Buchstaben auf die Linie über dem Text. Pro Text gibt es nur eine richtige Lösung.
         </p>
 
         <!-- Main Content Grid -->
@@ -97,6 +97,12 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // --- CONFIGURATION ---
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx5XMgjlX7MDkrdq9A-BXLd9r3nnaWbxFh9I33WxXdTLQ0tkSC4s3g2fdbFyi0XKD8/exec";
+        // This is the ID of the specific exam we want to load.
+        // In the future, you could create a menu to select different exams.
+        const EXAM_ID_TO_LOAD = "lesen_A2_1";
+
         // --- DOM ELEMENTS ---
         const loadingView = document.getElementById('loading-view');
         const examView = document.getElementById('exam-view');
@@ -104,6 +110,7 @@
         const textsContainer = document.getElementById('texts-container');
         const checkAnswersBtn = document.getElementById('check-answers-btn');
         const resultMessage = document.getElementById('result-message');
+        const examTitleEl = document.getElementById('exam-title');
 
         let draggedItem = null;
         let examData = null;
@@ -119,32 +126,24 @@
             draggedItem = null;
         }
 
-        function handleDragOver(e) {
-            e.preventDefault();
-        }
-
-        function handleDragEnter(e) {
-            e.target.classList.add('drag-over');
-        }
-
-        function handleDragLeave(e) {
-            e.target.classList.remove('drag-over');
-        }
+        function handleDragOver(e) { e.preventDefault(); }
+        function handleDragEnter(e) { e.target.classList.add('drag-over'); }
+        function handleDragLeave(e) { e.target.classList.remove('drag-over'); }
 
         function handleDrop(e) {
             e.preventDefault();
-            const dropZone = e.target;
+            const dropZone = e.target.closest('.drop-zone');
+            if (!dropZone) return;
+
             dropZone.classList.remove('drag-over');
 
             if (draggedItem && !draggedItem.classList.contains('used')) {
-                // Clear previous content and reset old heading if any
                 const previousLetter = dropZone.dataset.currentAnswer;
                 if (previousLetter) {
                     const oldHeading = document.querySelector(`[data-letter="${previousLetter}"]`);
                     if (oldHeading) oldHeading.classList.remove('used');
                 }
                 
-                // Set new answer
                 const letter = draggedItem.dataset.letter;
                 dropZone.textContent = letter;
                 dropZone.dataset.currentAnswer = letter;
@@ -174,6 +173,7 @@
             });
 
             resultMessage.textContent = `Du hast ${correctCount} von ${dropZones.length} richtig!`;
+            resultMessage.classList.remove('text-green-600', 'text-red-600');
             if (correctCount === dropZones.length) {
                 resultMessage.classList.add('text-green-600');
             } else {
@@ -182,6 +182,7 @@
         }
 
         function populateExam(data) {
+            examTitleEl.textContent = data.examTitle;
             // Populate Headings
             data.headings.forEach(h => {
                 const div = document.createElement('div');
@@ -220,37 +221,23 @@
         }
 
         async function loadExam() {
-            // In a real app, you would fetch this data. For now, we use a placeholder.
-            // const response = await fetch('YOUR_SCRIPT_URL?action=getLesenExam&id=lesen_A2_1');
-            // examData = await response.json();
-            
-            // Placeholder data based on your screenshots
-            examData = {
-                headings: [
-                    { letter: 'A', text: 'Jetzt das Fahrrad reparieren lassen' },
-                    { letter: 'B', text: 'Im Rathaus: Informationen über Tiere' },
-                    { letter: 'C', text: 'Tipp: Ausflug in den Tierpark' },
-                    { letter: 'D', text: 'Frühlingspflanzen im Sonderangebot' },
-                    { letter: 'E', text: 'Tipps fürs Radfahren in der Stadt' },
-                    { letter: 'F', text: 'Radfahren ist gesund!' },
-                    { letter: 'G', text: 'Mit neuen Pflanzen in den Frühling' },
-                    { letter: 'H', text: 'Haustiere machen krank' },
-                    { letter: 'I', text: 'Ausstellung: Blumen im Frühling' },
-                    { letter: 'K', text: 'Wiener wurden zum Radfahren befragt' }
-                ],
-                texts: [
-                    { id: '1', text: 'Seit Jahrzehnten ist der Oberberger Tierpark ein beliebtes Ausflugsziel. Die Vielfalt der Tiere und Pflanzen und die wunderbare Naturlandschaft sind die Gründe dafür. Das Angebot ist vielfältig: Führungen, Tierfütterungen, Naturlehrpfad, Waldspielplätze und vieles mehr.' },
-                    { id: '2', text: 'Fahrrad fahren in Hamburg liegt voll im Trend. Das Fahrrad hat sich im Stadtgebiet heute einen wichtigen Platz erobert. Mehr als 1.000 Kilometer an Radwegen sollen Sie animieren, umzusteigen und das Fahrrad (neu) zu entdecken. Was Sie dabei beachten müssen, aber auch Tipps zu interessanten Routen - das finden Sie unter www.hamburg.de/verkehr/radfahren.' },
-                    { id: '3', text: 'An Werktagen nützen 37 Prozent der Wiener ihr Rad in der Freizeit, aber auch für Wege in die Arbeit oder zur Schule/Uni ist das Rad ein beliebtes Verkehrsmittel. Das ging aus den Antworten auf eine Interview-Reihe zum Thema „Mit dem Fahrrad in Wien“ hervor. Das Ergebnis der Umfrage im Detail:' },
-                    { id: '4', text: 'Die aktuelle Ausstellung im Rathaus bietet Wissenswertes über Tierschutz und Tierhaltung. Für Kinder gibt es die Möglichkeit, verschiedene Haustiere kennenzulernen und sich über das Zusammenleben mit ihnen zu informieren. Der Eintritt ist frei!' },
-                    { id: '5', text: '„Unsere Stadt blüht auf!“ – Das ist unser Motto für den Frühling und alle sind eingeladen, mitzumachen: Egal ob Sie neue Sträucher, Bäume oder Blumen am Fenster pflanzen – mehr Natur tut allen gut! Schicken Sie ein Foto von Ihren Frühlingspflanzen an das Gemeindeamt und gewinnen Sie einen Einkaufsgutschein im Wert von 50 Euro.' }
-                ],
-                answers: { '1': 'C', '2': 'E', '3': 'K', '4': 'B', '5': 'G' }
-            };
+            try {
+                const url = `${SCRIPT_URL}?action=getLesenExam&id=${EXAM_ID_TO_LOAD}`;
+                const response = await fetch(url, { method: 'GET', mode: 'cors', redirect: 'follow' });
+                if (!response.ok) { throw new Error(`HTTP Error: ${response.status}`); }
+                
+                const data = await response.json();
+                if (data.result === 'error') { throw new Error(data.message); }
 
-            populateExam(examData);
-            loadingView.classList.add('hidden');
-            examView.classList.remove('hidden');
+                examData = data; // Store the fetched data
+                populateExam(examData);
+                loadingView.classList.add('hidden');
+                examView.classList.remove('hidden');
+
+            } catch (error) {
+                console.error("Failed to load exam:", error);
+                loadingView.innerHTML = `<p class="text-red-500 font-bold">Error loading exam: ${error.message}</p>`;
+            }
         }
 
         checkAnswersBtn.addEventListener('click', checkAnswers);
