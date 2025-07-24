@@ -126,15 +126,18 @@
                 const url = `${SCRIPT_URL}?action=getQuizById&id=${quizId}`;
                 
                 // *** FIX APPLIED HERE ***
+                // Using a more robust fetch request configuration.
                 const response = await fetch(url, {
                     method: 'GET',
                     mode: 'cors',
-                    redirect: 'follow'
+                    redirect: 'follow',
+                    cache: 'no-cache' // Prevents browser from using an old, cached response
                 });
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
+                
                 const quizData = await response.json();
                 
                 if (quizData && quizData.title && quizData.sentences) {
@@ -142,14 +145,17 @@
                     sentences = quizData.sentences;
                     startButton.disabled = false;
                 } else {
+                    // This handles cases where the script returns an error message
+                    const errorMessage = quizData.message || "Could not load quiz data. It may be missing or malformed.";
                     quizTitleHeader.textContent = "Error";
                     quizTitleHeader.classList.add('text-red-500');
-                    document.getElementById('login-form').innerHTML = '<p class="text-red-500">Could not load quiz data. It may be missing or malformed. Please go back and try another quiz.</p>';
+                    document.getElementById('login-form').innerHTML = `<p class="text-red-500">${errorMessage} Please go back and try another quiz.</p>`;
                 }
             } catch (error) {
                 console.error("Failed to fetch quiz data:", error);
                 quizTitleHeader.textContent = "Network Error";
                 quizTitleHeader.classList.add('text-red-500');
+                document.getElementById('login-form').innerHTML = `<p class="text-red-500">A network error occurred. Please check your internet connection and try again.</p>`;
             }
         }
 
@@ -255,6 +261,7 @@
                     method: 'POST',
                     mode: 'cors',
                     redirect: 'follow',
+                    cache: 'no-cache',
                     body: JSON.stringify(result),
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' }
                 });
@@ -262,7 +269,7 @@
                 if (data.result === 'success') {
                     submissionStatus.textContent = 'Your result has been saved!';
                     submissionStatus.style.color = 'green';
-                } else { throw new Error(data.error || 'Unknown error from script'); }
+                } else { throw new Error(data.message || 'Unknown error from script'); }
             } catch (error) {
                 console.error('Error submitting to Google Sheet:', error);
                 submissionStatus.textContent = 'Could not save your result. Please check your connection.';
@@ -288,4 +295,3 @@
     </script>
 </body>
 </html>
-
