@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Preparation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .exam-link {
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .exam-link:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-xl mx-auto bg-white/50 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/50 text-center">
+        <h1 class="text-4xl font-bold text-gray-800 mb-4">Exam Preparation</h1>
+        <p class="text-gray-600 mb-8 text-lg">Please select a "Lesen" exam to begin.</p>
+        
+        <div id="exam-list" class="space-y-4">
+            <p id="loading-message" class="text-gray-700">Loading exams...</p>
+        </div>
+        <a href="index.html" class="inline-block mt-8 text-violet-600 font-semibold hover:underline">← Back to Main Menu</a>
+    </div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx5XMgjlX7MDkrdq9A-BXLd9r3nnaWbxFh9I33WxXdTLQ0tkSC4s3g2fdbFyi0XKD8/exec";
+
+        const examListContainer = document.getElementById('exam-list');
+        const loadingMessage = document.getElementById('loading-message');
+
+        async function fetchAndDisplayExams() {
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getLesenExams`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const exams = await response.json();
+
+                loadingMessage.style.display = 'none';
+
+                if (exams && exams.length > 0) {
+                    exams.forEach(exam => {
+                        const link = document.createElement('a');
+                        link.href = `lesen.html?id=${exam.id}`;
+                        link.textContent = exam.title;
+                        link.className = 'exam-link block w-full text-left bg-indigo-500 text-white font-bold py-4 px-6 rounded-xl text-xl tracking-wide';
+                        
+                        examListContainer.appendChild(link);
+                    });
+                } else {
+                    examListContainer.innerHTML = '<p class="text-red-500">No exams found.</p>';
+                }
+
+            } catch (error) {
+                console.error('Failed to fetch exams:', error);
+                loadingMessage.style.display = 'none';
+                examListContainer.innerHTML = `<p class="text-red-500 font-semibold">Error: Could not load exams.</p>`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchAndDisplayExams);
+    </script>
+</body>
+</html>
