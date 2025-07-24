@@ -69,7 +69,7 @@
 
     <script>
         // --- CONFIGURATION ---
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzMVkf9FKMJYoCfxI9knHZHicOpJiK-Td9yRHmi4n34riDj6t8F3kmYaDok3MjTYNAUQg/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwFPaM0c6a3Ko2e4akWZ_wgQ2DPEH58XQ0Y228gXUZ5resLP-sFr-m-DJ3aYO8WB9Auw/exec";
 
         // --- DOM ELEMENTS ---
         const form = document.getElementById('create-quiz-form');
@@ -106,7 +106,6 @@
             // Add event listener to the new remove button
             sentenceDiv.querySelector('.remove-btn').addEventListener('click', () => {
                 sentenceDiv.remove();
-                // Note: sentenceCount does not decrease, but this is okay as it's just for display.
             });
         }
 
@@ -147,11 +146,11 @@
             
             try {
                 // *** FIX APPLIED HERE ***
-                // Simplified the fetch call, which can resolve CORS issues.
                 const url = `${SCRIPT_URL}?action=addQuiz`;
                 const response = await fetch(url, {
                     method: 'POST',
-                    redirect: 'follow',
+                    mode: 'cors', // Explicitly set mode
+                    redirect: 'follow', // Follow redirects
                     body: JSON.stringify(payload),
                     headers: {
                         'Content-Type': 'text/plain;charset=utf-8',
