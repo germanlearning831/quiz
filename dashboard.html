@@ -138,24 +138,28 @@
             resultsContainer.classList.add('hidden');
             try {
                 const url = `${SCRIPT_URL}?action=getResults`;
-                // Simplified the fetch call directly.
-                const response = await fetch(url, { method: 'GET', redirect: 'follow' });
+                
+                // *** FIX APPLIED HERE ***
+                // Using a more explicit fetch request to handle potential CORS/redirect issues.
+                const response = await fetch(url, {
+                    method: 'GET',
+                    mode: 'cors', // Explicitly set the mode
+                    redirect: 'follow' // Ensure redirects are followed
+                });
 
                 if (!response.ok) {
-                    // Throw a more detailed error for better debugging.
                     throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
                 }
                 
                 const data = await response.json();
 
-                if (data && data.length > 1) { // Check for more than just a header row
+                if (data && data.length > 1) {
                     allResults = data;
                     renderTable();
                 } else {
                     resultsContainer.innerHTML = '<p class="text-center py-4">No results found.</p>';
                 }
             } catch (error) {
-                // Log the full error object and display a more helpful message.
                 console.error('Failed to fetch results:', error);
                 resultsContainer.innerHTML = `<p class="text-center py-4 text-red-500">Error loading data. Details: ${error.message}. Please check your connection and script URL.</p>`;
             } finally {
